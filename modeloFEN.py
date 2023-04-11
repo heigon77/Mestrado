@@ -6,20 +6,25 @@ import cv2
 import torch
 from torchvision.transforms import ToTensor
 import numpy as np
+import torch.utils.data
+from torch.nn import functional as F
+from torch.utils.data import Dataset, DataLoader
+from torchvision import datasets, transforms
+from torchvision.utils import save_image
 
 class MinhaRedeNeural(nn.Module):
-    def __init__(self, num_outputs):
+    def __init__(self):
         super(MinhaRedeNeural, self).__init__()
-        # Carrega o modelo MobileNetV2 pré-treinado
+        
         self.modelo_base = models.mobilenet_v2(pretrained=True)
-        # Remove a última camada de classificação original (classifier)
+        
         self.modelo_base = nn.Sequential(*list(self.modelo_base.children())[:-1])
-        # Adiciona camadas de classificação personalizadas
+        
         self.classifiers = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(62720, 13),
                 nn.Softmax(dim=1)
-            ) for _ in range(num_outputs)
+            ) for _ in range(64)
         ])
 
     def forward(self, x):
@@ -29,54 +34,78 @@ class MinhaRedeNeural(nn.Module):
         outputs = [classifier(features) for classifier in self.classifiers]
         return outputs
 
-# Define o número de saídas desejadas
-num_outputs = 64
+class GamesDataset(Dataset):
+    def __init__(self, images, fen):
+        self.x = torch.from_numpy(images).type(torch.FloatTensor)
+        self.y = torch.from_numpy(fen).type(torch.FloatTensor)
+        self.n_samples = images.shape[0]
+    
+    def __getitem__(self, index):
+        return self.x[index], self.y[index]
 
-# Cria uma instância da rede neural personalizada
-modelo = MinhaRedeNeural(num_outputs)
+    def __len__(self):
+        return self.n_samples
+    
 
-# Define a função de perda e o otimizador
+# image_path = "exemplo.jpeg"
+# image = cv2.imread(image_path)
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# image = cv2.resize(image, (224, 224))
+
+# image_tensor = ToTensor()(image)
+# image_tensor = torch.unsqueeze(image_tensor, dim=0)
+
+# datasetTrain = GamesDataset(games[:int(len(games)*.98)])
+# dataLoaderTrain = DataLoader(dataset=datasetTrain, batch_size=64)
+
+# datasetTest = GamesDataset(games[int(len(games)*.98):])
+# dataLoaderTest = DataLoader(dataset=datasetTest, batch_size=64)
+
+print(f"Train: {len(dataLoaderTrain.dataset)}")
+print(f"Test: {len(dataLoaderTest.dataset)}")
+
+model = MinhaRedeNeural()
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(modelo.parameters(), lr=0.001)
 
-# Imprime a arquitetura do modelo
-print(modelo)
+num_epochs = 200
+model.train()
 
-# Define a função de perda e o otimizador
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(modelo.parameters(), lr=0.001)
+file_out = open('Data/outputsDBNlichessnormal.csv','w')
+file_out.write(f"Epoch,Loss\n")
 
-# Carrega uma imagem de exemplo
-image_path = "exemplo.jpeg"
-image = cv2.imread(image_path)
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-image = cv2.resize(image, (224, 224))  # Redimensiona a imagem para o tamanho de entrada do modelo
 
-# Converte a imagem para tensor e adiciona uma dimensão de lote (batch)
-image_tensor = ToTensor()(image)
-image_tensor = torch.unsqueeze(image_tensor, dim=0)
+print("Start Training")
+for epoch in range(num_epochs):
 
-# Cria uma instância do modelo
-num_classes = 10
-num_outputs = 64
-modelo = MinhaRedeNeural(num_outputs)
+    for (pos,_) in dataLoaderTrain:
 
-# Carrega os pesos treinados do modelo
-# checkpoint = torch.load('caminho/do/seu/checkpoint.pth') # substitua pelo caminho do seu arquivo de checkpoint
-# modelo.load_state_dict(checkpoint['modelo_state_dict'])
-modelo.eval()  # Define o modelo no modo de avaliação (não treinamento)
+        pos = pos.to(device)
 
-print(image_tensor.shape)
-# Passa a imagem pelo modelo para obter as previsões
+        fen = model(pos)
+        loss = criterion(recon, pos)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print(f"Epoch: {epoch+1}, Loss: {loss.item():4f}")
+    file_out.write(f"{epoch+1},{loss.item():4f}\n")
+file_out.close()
+print("Finish Training")
+    
+
+
 with torch.no_grad():
     outputs = modelo(image_tensor)
-    # Converte as previsões em probabilidades usando a função de ativação Softmax
+    
     probabilities = [torch.softmax(output, dim=1) for output in outputs]
 
-# Converte as probabilidades em numpy array
+
 probabilities = [prob.numpy() for prob in probabilities]
 
-# Exibe as previsões
+
 for i, prob in enumerate(probabilities):
     print(f"Saída {i+1}:")
     for j, class_prob in enumerate(prob[0]):
