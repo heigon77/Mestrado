@@ -18,7 +18,6 @@ class MinhaRedeNeural(nn.Module):
         
         self.modelo_base = models.mobilenet_v2(pretrained=True)
         
-        self.modelo_base = nn.Sequential(*list(self.modelo_base.children())[:-1])
         
         self.classifiers = nn.ModuleList([
             nn.Sequential(
@@ -30,7 +29,7 @@ class MinhaRedeNeural(nn.Module):
     def forward(self, x):
         features = self.modelo_base(x)
         print(features.size())
-        features = torch.flatten(features, 1)
+        # features = torch.flatten(features, 1)
         outputs = [classifier(features) for classifier in self.classifiers]
         return outputs
 
@@ -47,13 +46,24 @@ class GamesDataset(Dataset):
         return self.n_samples
     
 
+image_path = "exemplo.jpeg"
+image = cv2.imread(image_path)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
 # image_path = "exemplo.jpeg"
 # image = cv2.imread(image_path)
 # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 # image = cv2.resize(image, (224, 224))
 
-# image_tensor = ToTensor()(image)
-# image_tensor = torch.unsqueeze(image_tensor, dim=0)
+input_tensor = preprocess(image)
+input_batch = input_tensor.unsqueeze(0)
 
 # datasetTrain = GamesDataset(games[:int(len(games)*.98)])
 # dataLoaderTrain = DataLoader(dataset=datasetTrain, batch_size=64)
@@ -61,44 +71,44 @@ class GamesDataset(Dataset):
 # datasetTest = GamesDataset(games[int(len(games)*.98):])
 # dataLoaderTest = DataLoader(dataset=datasetTest, batch_size=64)
 
-print(f"Train: {len(dataLoaderTrain.dataset)}")
-print(f"Test: {len(dataLoaderTest.dataset)}")
+# print(f"Train: {len(dataLoaderTrain.dataset)}")
+# print(f"Test: {len(dataLoaderTest.dataset)}")
 
 model = MinhaRedeNeural()
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(modelo.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 num_epochs = 200
 model.train()
 
-file_out = open('Data/outputsDBNlichessnormal.csv','w')
-file_out.write(f"Epoch,Loss\n")
+# file_out = open('Data/outputsDBNlichessnormal.csv','w')
+# file_out.write(f"Epoch,Loss\n")
 
 
-print("Start Training")
-for epoch in range(num_epochs):
+# print("Start Training")
+# for epoch in range(num_epochs):
 
-    for (pos,_) in dataLoaderTrain:
+#     for (pos,_) in dataLoaderTrain:
 
-        pos = pos.to(device)
+#         pos = pos.to(device)
 
-        fen = model(pos)
-        loss = criterion(recon, pos)
+#         fen = model(pos)
+#         loss = criterion(recon, pos)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
 
-    print(f"Epoch: {epoch+1}, Loss: {loss.item():4f}")
-    file_out.write(f"{epoch+1},{loss.item():4f}\n")
-file_out.close()
-print("Finish Training")
+#     print(f"Epoch: {epoch+1}, Loss: {loss.item():4f}")
+#     file_out.write(f"{epoch+1},{loss.item():4f}\n")
+# file_out.close()
+# print("Finish Training")
     
 
 
 with torch.no_grad():
-    outputs = modelo(image_tensor)
+    outputs = model(image_tensor)
     
     probabilities = [torch.softmax(output, dim=1) for output in outputs]
 
