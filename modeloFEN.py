@@ -162,8 +162,8 @@ dataLoaderTrain = DataLoader(dataset=datasetTrain, batch_size=32)
 datasetTest = GamesDataset(imagens_array[int(len(imagens_array)*.98):], fens[int(len(fens)*.98):])
 dataLoaderTest = DataLoader(dataset=datasetTest, batch_size=32)
 
-print(f"Train: {len(dataLoaderTrain.dataset)}")
-print(f"Test: {len(dataLoaderTest.dataset)}")
+# print(f"Train: {len(dataLoaderTrain.dataset)}")
+# print(f"Test: {len(dataLoaderTest.dataset)}")
 
 model = MinhaRedeNeural()
 model.to(device)
@@ -200,9 +200,9 @@ for epoch in range(num_epochs):
 
         loss = criterion(fen_pred, fen_y)
 
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+#         optimizer.zero_grad()
+#         loss.backward()
+#         optimizer.step()
 
         fen_pred = fen_pred.cpu().detach().numpy().astype('float32')
         fen_y = fen_y.cpu().detach().numpy().astype('float32')
