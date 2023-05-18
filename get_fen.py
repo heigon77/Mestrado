@@ -1,63 +1,42 @@
-import chess
 import numpy as np
-import pandas as pd
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.utils import resample
+from sklearn.metrics import classification_report
 
-def get_fen(bitboard):
-    board = chess.Board()
-    board.clear()
+# Gerar um dataset de exemplo
+X, y = make_classification(n_samples=1000, n_features=10, weights=[0.9, 0.1], random_state=42)
+print("Contagem de classes antes do balanceamento:")
+print(np.bincount(y))
 
-    piece_idx = {0: chess.PAWN, 1: chess.KNIGHT, 2: chess.BISHOP, 3: chess.ROOK, 4: chess.QUEEN, 5: chess.KING}
+# Dividir o dataset em treinamento e teste
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    for i in range(64):
-        for j in range(12):
-            if bitboard[j + 12 * i] == 1:
-                color = chess.BLACK if j < 6 else chess.WHITE
-                piece_type = piece_idx[j % 6]
-                square = chess.SQUARES[i]
-                board.set_piece_at(square, chess.Piece(piece_type, color))
+# Verificar se o dataset está balanceado
+class_counts = np.bincount(y_train)
+is_balanced = class_counts[0] == class_counts[1]
+print(class_counts[0])
+print(class_counts[1])
+print("O dataset está balanceado? ", is_balanced)
 
-    board.turn = bool(bitboard[-1])
-    castling_fen = ""
-    if bitboard[-2]:
-        castling_fen += "K"
-    if bitboard[-3]:
-        castling_fen += "Q"
-    if bitboard[-4]:
-        castling_fen += "k"
-    if bitboard[-5]:
-        castling_fen += "q"
-    board.set_castling_fen(castling_fen)
+# Realizar RandomOverSampling na classe minoritária
+X_train_over, y_train_over = resample(X_train[y_train == 1], y_train[y_train == 1],
+                                      replace=True, n_samples=class_counts[0], random_state=42)
+X_train_balanced_over = np.vstack((X_train[y_train == 0], X_train_over))
+y_train_balanced_over = np.hstack((y_train[y_train == 0], y_train_over))
+print("Contagem de classes após RandomOverSampling:")
+print(np.bincount(y_train_balanced_over))
 
-    fen = board.fen()
-    return fen
+# Realizar RandomUnderSampling na classe majoritária
+X_train_under, y_train_under = resample(X_train[y_train == 0], y_train[y_train == 0],
+                                        replace=False, n_samples=class_counts[1], random_state=42)
+X_train_balanced_under = np.vstack((X_train_under, X_train[y_train == 1]))
+y_train_balanced_under = np.hstack((y_train_under, y_train[y_train == 1]))
+print("Contagem de classes após RandomUnderSampling:")
+print(np.bincount(y_train_balanced_under))
 
-def get_bitboard(board):
+# Agora você pode usar X_train_balanced_over e y_train_balanced_over para treinar seu modelo com RandomOverSampling,
+# ou X_train_balanced_under e y_train_balanced_under para treinar seu modelo com RandomUnderSampling.
 
-    bitboard = np.zeros(773, dtype=int)
+# Lembre-se de aplicar a mesma transformação de balanceamento no conjunto de teste, se necessário, antes de avaliar o modelo.
 
-    piece_idx = {chess.PAWN: 0, chess.KNIGHT: 1, chess.BISHOP: 2, chess.ROOK: 3, chess.QUEEN: 4, chess.KING: 5}
-
-    for i in range(64):
-        if board.piece_at(i):
-            color = int(board.piece_at(i).color)
-            piece = 6*color + piece_idx[board.piece_at(i).piece_type]
-            bitboard[piece + 12*i] = 1
-
-    bitboard[-1] = int(board.turn)
-    bitboard[-2] = int(board.has_kingside_castling_rights(chess.WHITE))
-    bitboard[-3] = int(board.has_kingside_castling_rights(chess.BLACK))
-    bitboard[-4] = int(board.has_queenside_castling_rights(chess.WHITE))
-    bitboard[-5] = int(board.has_queenside_castling_rights(chess.BLACK))
-
-    return bitboard
-
-
-df = pd.read_csv('Dataset\data_bits_normal.csv')
-
-aux = df['Position'].apply(lambda x: np.fromstring(x, dtype=int, sep=' '))
-
-df['FEN'] = aux.apply(get_fen)
-
-df = df[['Position', 'FEN', 'Result', 'Rating', 'Capture']]
-
-df.to_csv('novo_arquivo.csv', index=False)

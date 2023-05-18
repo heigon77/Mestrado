@@ -30,7 +30,7 @@ bpy.ops.wm.open_mainfile(filepath='Blender\chess.blend')
 bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 bpy.context.scene.render.image_settings.file_format = 'PNG'
 
-num_imagens = 10200
+num_imagens = 10500
 df = pd.read_csv('Dataset\JogosPosFen.csv', nrows=num_imagens)
 
 fen_array = df['FEN'].to_numpy()
@@ -38,7 +38,7 @@ fen_array = df['FEN'].to_numpy()
 ftrain = open("Dataset\img_fen.csv", "w")
 ftrain.write("IMG,FEN\n")
 
-for i in range(num_imagens):
+for i in range(10490,10500):
 
     Bpawns = ["B a Pawn", "B b Pawn", "B c Pawn", "B d Pawn", "B e Pawn", "B f Pawn", "B g Pawn", "B h Pawn"]
     Bknight = ["B b Knight", "B g Knight"]

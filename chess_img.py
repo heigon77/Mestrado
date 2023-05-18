@@ -96,7 +96,7 @@ for i in range(num_imagens):
     fen = tabuleiro.fen()
     ftrain.write(f"{img_name},{fen}\n")
 
-    bpy.context.scene.render.filepath = 'imagens/i' + str(i)
+    bpy.context.scene.render.filepath = 'E:\Mestrado\imagens/i' + str(i)
     bpy.context.scene.frame_set(i + 1)
     bpy.ops.render.render(write_still=True)
 
