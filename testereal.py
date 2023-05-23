@@ -144,17 +144,19 @@ model.to(device)
 model.load_state_dict(torch.load("modelo.pth"))
 model.eval()
 
-imagem = cv.imread(f"Dataset\Teste\i10491.png", cv.IMREAD_COLOR)
+imagem = cv.imread(f"Dataset\Teste\CompressJPEG.online_1920x1080_image.jpg", cv.IMREAD_COLOR)
 
-cv.imshow('Original', imagem)
-cv.waitKey(0)
-cv.destroyAllWindows()
+print(imagem.shape)
+
+# cv.imshow('Original', imagem)
+# cv.waitKey(0)
+# cv.destroyAllWindows()
 
 bordas = cv.Canny(imagem, 100, 150, apertureSize=3)
 
-cv.imshow('Canny', bordas)
-cv.waitKey(0)
-cv.destroyAllWindows()
+# cv.imshow('Canny', bordas)
+# cv.waitKey(0)
+# cv.destroyAllWindows()
 
 linhas = cv.HoughLines(bordas, 1, np.pi/180, 160)
 
@@ -171,9 +173,9 @@ for linha in linhas:
     y2 = int(y0 - 10000 * (a))
     cv.line(images_linhas, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-cv.imshow('Hough', images_linhas)
-cv.waitKey(0)
-cv.destroyAllWindows()
+# cv.imshow('Hough', images_linhas)
+# cv.waitKey(0)
+# cv.destroyAllWindows()
 
 linhas_agrupadas = []
 for linha in linhas:
@@ -225,11 +227,14 @@ for linha in linhas_agrupadas:
 
 linhas_casas = []
 
-for linha in linhas_agrupadas:
+for idx,linha in enumerate(linhas_agrupadas):
     rho,theta = linha[0]
 
-    if not (rho == max_rho2 or rho == max_rho1 or rho == min_rho1 or rho == min_rho2):
+    if idx not in [1,8,11,14,21,22,23,24,26,27,28]:
         linhas_casas.append(linha)
+
+    # if not (rho == max_rho2 or rho == max_rho1 or rho == min_rho1 or rho == min_rho2):
+    #     linhas_casas.append(linha)
 
 images_linhas = imagem.copy()
 linhas_pontos = []
