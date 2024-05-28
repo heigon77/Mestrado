@@ -2,15 +2,19 @@ import cv2 as cv
 import numpy as np
 import pandas as pd
 import chess as ch
+import sys
 
 df = pd.read_csv('Dataset\img_fen.csv')
 file = open("Dataset\img_piece_square.csv", "w")
 file.write("Image,Piece,Square\n")
 
+total_rows = len(df)
+
 for index, row in df.iterrows():
 
     if index % 100 == 0:
-        print(index)
+        percentage = (index / total_rows) * 100
+        print(f"{percentage:.2f}% complete")
 
     img_name = row['IMG']
     fen = row['FEN']
@@ -22,6 +26,20 @@ for index, row in df.iterrows():
     imagem = cv.imread(f"imagens/{img_name}.png", cv.IMREAD_COLOR)
 
     # cv.imshow('Original', imagem)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows()
+
+    center_x = imagem.shape[1] // 2
+    center_y = imagem.shape[0] // 2
+
+    start_x = center_x - 550
+    end_x = center_x + 550
+    start_y = center_y - 520
+    end_y = center_y + 450
+
+    imagem = imagem[start_y:end_y, start_x:end_x]
+
+    # cv.imshow('Mask', imagem)
     # cv.waitKey(0)
     # cv.destroyAllWindows()
 
@@ -77,34 +95,19 @@ for index, row in df.iterrows():
     for linha in linhas_agrupadas:
         rho, theta = linha[0]
         if theta > 1 and theta < 3:
-
-            if max_rho1 == None:
-                max_rho1 = rho
-            elif rho > max_rho1:
-                max_rho1 = rho
             
             if min_rho1 == None:
                 min_rho1 = rho
             elif rho < min_rho1:
                 min_rho1 = rho
-        # else:
 
-        #     if max_rho2 == None:
-        #         max_rho2 = rho
-        #     elif rho > max_rho2:
-        #         max_rho2 = rho
-            
-        #     if min_rho2 == None:
-        #         min_rho2 = rho
-        #     elif rho < min_rho2:
-        #         min_rho2 = rho
 
     linhas_casas = []
 
     for linha in linhas_agrupadas:
         rho,theta = linha[0]
 
-        if not (rho == max_rho2 or rho == max_rho1 or rho == min_rho1 or rho == min_rho2):
+        if not (rho == min_rho1):
             linhas_casas.append(linha)
 
     images_linhas = imagem.copy()
@@ -175,16 +178,17 @@ for index, row in df.iterrows():
                 pontos = [pontos_por_linhas[i][j], pontos_por_linhas[i][j+1], pontos_por_linhas[i+1][j], pontos_por_linhas[i+1][j+1]]
                 casas.append(pontos)
 
-        # for i in casas:
-        #     imagem_pontos = imagem.copy()
-        #     for j in i:
+        imagem_pontos = imagem.copy()
+        for i in casas:
+            
+            for j in i:
                 
-        #         x, y = j
-        #         cv.circle(imagem_pontos, (x, y), 5, (255, 0, 0), 2)
+                x, y = j
+                cv.circle(imagem_pontos, (x, y), 5, (255, 0, 0), 2)
 
-        #     cv.imshow('Intersecções', imagem_pontos)
-        #     cv.waitKey(0)
-        #     cv.destroyAllWindows()
+        # cv.imshow('Intersecções', imagem_pontos)
+        # cv.waitKey(0)
+        # cv.destroyAllWindows()
         for i in range(64):
             ponto1 = casas[i][0]
             ponto2 = casas[i][1]
@@ -204,7 +208,7 @@ for index, row in df.iterrows():
             if y_min - 80 < 0:
                 y_min = 80
 
-            imagem_recortada = imagem[y_min-40:y_max, x_min:x_max]
+            imagem_recortada = imagem[y_min-90:y_max, x_min:x_max]
 
             piece = board.piece_at(i)
 
@@ -214,6 +218,8 @@ for index, row in df.iterrows():
                 cv.imwrite(f"Recortadas/{img_name}_{i}.png", imagem_recortada)
             else:
                 symbol = '0'
+                file.write(f"{img_name}_{i},{symbol},{i}\n")
+                cv.imwrite(f"Recortadas/{img_name}_{i}.png", imagem_recortada)
 
             # cv.imshow('Img', imagem_recortada)
             # cv.waitKey(0)
@@ -224,3 +230,5 @@ for index, row in df.iterrows():
         ferror = open("erros.txt", "a")
         ferror.write(f"{img_name} An unexpected error occurred: {e}\n")
         ferror.close()
+
+print(f"100.00% complete")

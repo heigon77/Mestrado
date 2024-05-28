@@ -2,18 +2,18 @@ import bpy
 import numpy as np
 import chess as ch
 
-pieces = ["B a Pawn", "B b Pawn", "B c Pawn", "B d Pawn", "B e Pawn", "B f Pawn", "B g Pawn", "B h Pawn",
-          "B b Knight", "B g Knight",
-          "B DS Bishop", "B WS Bishop",
-          "B a Rook", "B h Rook",
-          "B King", "B Queen",
-          "W a Pawn", "W b Pawn", "W c Pawn", "W d Pawn", "W e Pawn", "W f Pawn", "W g Pawn", "W h Pawn",
-          "W b Knight", "W g Knight",
-          "W DS Bishop", "W WS Bishop",
-          "W a Rook", "W h Rook",
-          "W King", "W Queen"]
+pieces = ["B_a_Pawn","B_b_Pawn","B_c_Pawn","B_d_Pawn","B_e_Pawn","B_f_Pawn","B_g_Pawn","B_h_Pawn",
+          "B_b_Knight","B_g_Knight",
+          "B_DS_Bishop","B_WS_Bishop",
+          "B_a_Rook","B_h_Rook",
+          "B_King","B_Queen",
+          "W_a_Pawn","W_b_Pawn","W_c_Pawn","W_d_Pawn","W_e_Pawn","W_f_Pawn","W_g_Pawn","W_h_Pawn",
+          "W_b_Knight","W_g_Knight",
+          "W_DS_Bishop","W_WS_Bishop",
+          "W_a_Rook","W_h_Rook",
+          "W_King","W_Queen"]
 
-arr = np.arange(-3.5, 4.0, 1.0)
+arr = np.arange(3.5, -4.0, -1.0)
 idx1, idx2 = np.meshgrid(arr, arr, indexing='ij')
 positions = np.stack((idx1, idx2), axis=-1)
 
@@ -28,12 +28,12 @@ squares = np.array([[ch.H8,ch.H7,ch.H6,ch.H5,ch.H4,ch.H3,ch.H2,ch.H1],
 
 integers = np.arange(8)
 
-bpy.ops.wm.open_mainfile(filepath='Blender\chess.blend')
+bpy.ops.wm.open_mainfile(filepath='Blender\\testeReal.blend')
 
 bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 bpy.context.scene.render.image_settings.file_format = 'PNG'
 
-num_imagens = 10000
+num_imagens = 10
 
 ftrain = open("Dataset\img_fen.csv", "w")
 ftrain.write("IMG,FEN\n")
