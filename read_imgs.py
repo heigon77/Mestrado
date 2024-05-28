@@ -6,7 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 
-pieces_id = {'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4, 'K': 5, 'p': 0, 'n': 1, 'b': 2, 'r': 3, 'q': 4, 'k': 5}
+pieces_id = {'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4, 'K': 5, 'p': 6, 'n': 7, 'b': 8, 'r': 9, 'q': 10, 'k': 11}
 
 imagens_processadas = []
 classes = []
@@ -57,7 +57,7 @@ for index, row in df.iterrows():
         imagem_tensor = preprocess(imagem)
         imagens_processadas.append(imagem_tensor)
 
-        classe = np.zeros(6, dtype=np.int32)
+        classe = np.zeros(12, dtype=np.int32)
         classe[pieces_id[piece]] = 1
 
         classes.append(classe)
