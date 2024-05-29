@@ -12,52 +12,49 @@ imagens_processadas = []
 classes = []
 
 df = pd.read_csv('Dataset\img_piece_square.csv')
+df = df.drop_duplicates()
 
 validPieces = 0
 
 for index, row in df.iterrows():
 
+    try:
+        piece = row['Piece']
 
-    if validPieces % 20000 == 0 and validPieces > 1 and imagens_processadas != []:
-        print(validPieces)
+        if piece != '0':
+            validPieces += 1
 
-        imagens_tensor = torch.stack(imagens_processadas)
-        classes = np.array(classes, dtype=np.int32)
+            img_name = row['Image']
 
-        torch.save(imagens_tensor, f"Dataset/Pecas/imagens_casa_tensor{validPieces}.pt")
-        np.save(f"Dataset/Pecas/pecas_casa_tensor{validPieces}.npy", classes)
+            imagem_path = f"RecReais/{img_name}.png"
+            imagem = Image.open(imagem_path)
 
-        if validPieces == 80000:
-            break
+            if imagem.mode != 'RGB':
+                imagem = imagem.convert('RGB')
 
-        imagens_processadas = []
-        classes = []
+            image_array = np.array(imagem)
+            
+            preprocess = transforms.Compose([
+                transforms.Resize((224,224)),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
 
-    piece = row['Piece']
+            imagem_tensor = preprocess(imagem)
+            imagens_processadas.append(imagem_tensor)
 
-    if piece != '0':
-        validPieces += 1
+            classe = np.zeros(12, dtype=np.int32)
+            classe[pieces_id[piece]] = 1
 
-        img_name = row['Image']
+            classes.append(classe)
+    
+    except:
+        print(f"Errr {img_name}")
 
-        imagem_path = f"Recortadas/{img_name}.png"
-        imagem = Image.open(imagem_path)
+print(validPieces)
 
-        if imagem.mode != 'RGB':
-            imagem = imagem.convert('RGB')
+imagens_tensor = torch.stack(imagens_processadas)
+classes = np.array(classes, dtype=np.int32)
 
-        image_array = np.array(imagem)
-        
-        preprocess = transforms.Compose([
-            transforms.Resize((224,224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-
-        imagem_tensor = preprocess(imagem)
-        imagens_processadas.append(imagem_tensor)
-
-        classe = np.zeros(12, dtype=np.int32)
-        classe[pieces_id[piece]] = 1
-
-        classes.append(classe)
+torch.save(imagens_tensor, f"Dataset/Pecas/imagens_casa_tensor_real.pt")
+np.save(f"Dataset/Pecas/pecas_casa_tensor_real.npy", classes)
